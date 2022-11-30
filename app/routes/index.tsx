@@ -6,6 +6,7 @@ import Input from '~/components/Input';
 import MiniTable, { type Format } from './MiniTable';
 import Header from '~/components/Header';
 import Spinner from '../components/Spinner';
+import { Form, useFetcher, useTransition, useActionData } from '@remix-run/react';
 
 interface ActionData {
   title: string;
@@ -13,9 +14,10 @@ interface ActionData {
   duration: number | string;
   formats: Format[];
 }
-export const action: ActionFunction = async (): Promise<ActionData | null> => {
+export const action: ActionFunction = async ({ request }): Promise<ActionData | null> => {
   // 1.- necesitamos obtener la url del video de youtube
-  let url;
+  let params= await request.formData();
+  let url= params.get('url');
   if (!url) return null;
 
   const info = await ytdl.getInfo(url);
@@ -30,34 +32,60 @@ export const action: ActionFunction = async (): Promise<ActionData | null> => {
   return result;
 };
 
+export function ErrorBoundary({ error }) {
+  return (
+    <div className='bg-blue-200 text-blue-800 h-screen flex flex-col gap-8 items-center py-20'>
+      <img className='w-[150px] rounded' src='error404.jpeg' alt='error' />
+      <h1 className='text-lg font-semibold'>Error</h1>
+      <p className='p-4 rounded bg-blue-300'>{error.message}</p>
+      <p className='text-lg font-semibold'>The stack trace is:</p>
+      <pre className='p-4 rounded bg-blue-300'>{error.stack}</pre>
+    </div>
+  );
+}
+
 export default function Thumb() {
   // 2.- Necesitamos una manera de recibir la respuesta del action y/o las transiciones (loading, idle etc.)
   const [url, setURL] = useState('https://youtu.be/lV61TDHiALo');
-
+  const data = useActionData();
+  const fetcher= useFetcher();
+  const transition = useTransition();
+  console.log(transition);
   const handleDownload = (format: Format) => {
     //5.- una vez que mostramos los resultados necesitamos abrir una nueva pestaña para descargar el video
+    const informacion = {
+      url: url,
+      itag: format.itag,
+      qualityLabel: format.qualityLabel,
+      container: format.container,
+      title: data.title
+    }
+    //fetcher.submit( informacion, { method:'get', action: '/download', contentType:"multipart/form-data"});
+    //fetcher.load(`/download?url=${url}&itag=${format.itag}&qualityLabel=${format.qualityLabel}&container=${format.container}&title=${data.title}`);
+    window.open(`/download?url=${url}&itag=${format.itag}&qualityLabel=${format.qualityLabel}&container=${format.container}&title=${data.title}`, '_self'); //, 'noopener,noreferrer'
   };
-
   return (
-    <section className='bg-violet-200 text-violet-800 h-screen flex flex-col gap-8 items-center py-20'>
+    <section className='bg-blue-200 text-blue-800 h-screen flex flex-col gap-8 items-center py-20'>
       <Header />
       {/* 3.-  Necesitamos un form para enviar la petición post */}
-      <div className='rounded-xl shadow-xl flex'>
-        <Input
-          placeholder='Escribe tu link'
-          value={url}
-          name='url'
-          onChange={({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
-            setURL(value)
-          }
-        />
-        <Button type='submit'>
-          {/* 4.- Aquí necesitamos una manera de mostrar un loading */}
-          {true ? 'Analizar' : <Spinner />}
-        </Button>
-      </div>
+      <Form method="post" encType="multipart/form-data">
+        <div className='rounded-xl shadow-xl flex'>
+          <Input
+            placeholder='Escribe tu link'
+            value={url}
+            name='url'
+            onChange={({ target: { value } }: ChangeEvent<HTMLInputElement>) =>
+              setURL(value)
+            }
+          />
+          <Button type='submit'>
+            {/* 4.- Aquí necesitamos una manera de mostrar un loading */}
+            {transition.state === 'idle' ? 'Analizar' : <Spinner />}
+          </Button>
+        </div>
+      </Form>      
       {/* 6.- La data que nos devuelve el action tiene que usarse para mostrar la mini tabla, así como entregarsele */}
-      {false && <MiniTable data={'data'} onClick={handleDownload} />}
+      { !data?.thumbnail ? null : <MiniTable data={data} onClick={handleDownload} />}
     </section>
   );
 }
