@@ -1,4 +1,4 @@
-import { type ActionFunction } from '@remix-run/node';
+import { LoaderFunction, type ActionFunction, redirect } from '@remix-run/node';
 import ytdl from 'ytdl-core';
 import { type ChangeEvent, useState } from 'react';
 import Button from '~/components/Button';
@@ -6,7 +6,8 @@ import Input from '~/components/Input';
 import MiniTable, { type Format } from './MiniTable';
 import Header from '~/components/Header';
 import Spinner from '../components/Spinner';
-import { Form, useFetcher, useTransition, useActionData } from '@remix-run/react';
+import { Form, useFetcher, useTransition, useActionData, useLoaderData } from '@remix-run/react';
+import { getSession } from '~/sessions';
 
 interface ActionData {
   title: string;
@@ -43,12 +44,21 @@ export function ErrorBoundary({ error }) {
     </div>
   );
 }
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(request.headers.get('Cookie'));
+  console.log(`IndexSession => ${JSON.stringify(session)}`);
+  if (!session.has('userId')) {
+    return redirect('/login');
+  }
+  return null;
+};
 
 export default function Thumb() {
   // 2.- Necesitamos una manera de recibir la respuesta del action y/o las transiciones (loading, idle etc.)
   const [url, setURL] = useState('https://youtu.be/lV61TDHiALo');
   const data = useActionData();
   const fetcher= useFetcher();
+  //const session = useLoaderData();
   const transition = useTransition();
   console.log(transition);
   const handleDownload = (format: Format) => {
@@ -67,6 +77,13 @@ export default function Thumb() {
   return (
     <section className='bg-blue-200 text-blue-800 h-screen flex flex-col gap-8 items-center py-20'>
       <Header />
+      <Button className = 'text-blue-100 bg-blue-500 text-xl p-4 rounded-r-xl hover:bg-blue-700 transition-all disabled:bg-bg-violet-100 flex justify-center' 
+      type='submit' onClick={ () => {
+        //fetcher.submit({ method:'post', action: '/closeSession'});
+        fetcher.load('/closeSession');
+      }}>
+        Cerrar Sesion
+      </Button>
       {/* 3.-  Necesitamos un form para enviar la petición post */}
       <Form method="post" encType="multipart/form-data">
         <div className='rounded-xl shadow-xl flex'>
