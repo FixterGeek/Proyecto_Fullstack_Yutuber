@@ -31,13 +31,13 @@ export const action: ActionFunction = async (): Promise<ActionData | null> => {
   return result;
 };
 
-// export const loader: LoaderFunction = async ({ request }) => {
-//   const session = await getSession(request.headers.get('Cookie'));
-//   if (!session.has('userId')) {
-//     return redirect('/login');
-//   }
-//   return null;
-// };
+export const loader: LoaderFunction = async ({ request }) => {
+  const session = await getSession(request.headers.get('Cookie'));
+  if (!session.has('userId')) {
+    return redirect('/login');
+  }
+  return null;
+};
 
 export default function Thumb() {
   // 2.- Necesitamos una manera de recibir la respuesta del action y/o las transiciones (loading, idle etc.)

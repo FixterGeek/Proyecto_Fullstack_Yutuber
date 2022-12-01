@@ -20,7 +20,7 @@ export type UserTpe = z.infer<typeof userSchema>;
 export const action: ActionFunction = async ({ request }) => {
   const formData = await request.formData();
   const form = Object.fromEntries(formData);
-  const validationResult = userSchema.safeParse(form);
+  const validationResult = userSchema.safeParse(form); // zod
   if (!validationResult.success) return validationResult.error;
   // exists?
   const exists = await db.user.findUnique({
