@@ -19,8 +19,8 @@ export default function Button({
 }: ButtonProps) {
   const className =
     variant === 'main'
-      ? 'text-violet-100 bg-violet-500 text-xl p-4 rounded-r-xl hover:bg-violet-700 transition-all disabled:bg-bg-violet-100 flex justify-center'
-      : 'p-4 border border-violet-500 w-32 rounded bg-violet-300 disabled:bg-bg-violet-100 flex justify-center';
+      ? 'text-blue-100 bg-blue-500 text-xl p-4 rounded-r-xl hover:bg-blue-700 transition-all disabled:bg-bg-blue-100 flex justify-center'
+      : 'p-4 border border-blue-500 w-32 rounded bg-blue-300 disabled:bg-bg-blue-100 flex justify-center';
 
   return (
     <button
